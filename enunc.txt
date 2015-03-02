@@ -1,0 +1,32 @@
+ == Projeto 1 ==
+
+Na primeira etapa será implementado um parser que converterá um subconjunto de latex para html.
+
+O cabeçalho do arquivo latex é tudo que está antes do \begin{document} e poderá conter:
+
+    \documentclass[...]{nomedocumento}: deverá ser ignorado
+    \usepackage[...]{nomepacote}: deverá ser ignorado
+    \title{titulo}: ver sobre o comando \maketitle adiante
+    \author{nomeautor}: deverá ser ignorado
+
+O corpo do documento inicia-se com \begin{document} e encerra-se com \end{document} e poderá conter:
+
+    textos
+    texto sob o modo matemático
+    comandos
+
+No texto presente no corpo do documento, linhas em branco devem ser consideradas e inseridas no HTML gerado.
+
+O modo matemático será demarcado somente pelo sinal cifrão. Caso queira mostrar o caracter $ ao invés de entrar no modo matemático, será necessário digitar \$. O seu conteúdo deve ser renderizado como o modo matemático do Latex (existem bibliotecas javascript que podem ajudar nesta parte).
+
+Os comandos latex que poderão estar incluídos no arquivo serão:
+
+    \maketitle: mostra o título descrito pelo \title no cabeçalho (você pode supor que sempre que um \maketitle estiver presente, existe um \title também).
+    \textbf{texto1}: aplica negrito em texto1
+    \textit{texto1}: aplica itálico em texto1
+    \begin{itemize} \item texto1 \item texto2 \end{itemize}: gera uma lista não enumerada com os itens texto1 e texto2 (pode haver encadeamento de lista)
+    \includegraphics{figura1}: mostrar a imagem figura1
+    \cite{ref1}: adiciona o número da referência ref1, que se encontra na seção de 'thebibliography'
+    \begin{thebibliography} \bibitem{ref1} Referencia 1 \bibitem{ref2} Referencia 2. \end{thebibliography}: adiciona as referências bibliográficas; o corpo do documento poderá conter apenas uma seção 'thebibliography'.
+
+O projeto será implementado utilizando a ferramenta Flex e Bison. Note que a especificação do projeto está consideravalmente livre, então use sua criatividade para implementar o proposto. 
