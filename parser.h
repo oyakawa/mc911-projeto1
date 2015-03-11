@@ -65,8 +65,9 @@ extern int yydebug;
     T_LBRACKET = 275,
     T_RBRACKET = 276,
     T_NEWLINE = 277,
-    T_P = 278,
-    T_DOLLAR = 279
+    T_NEWP = 278,
+    T_P = 279,
+    T_DOLLAR = 280
   };
 #endif
 
@@ -79,7 +80,7 @@ union YYSTYPE
 
 	char *str;
 
-#line 83 "parser.h" /* yacc.c:1909  */
+#line 84 "parser.h" /* yacc.c:1909  */
 };
 # define YYSTYPE_IS_TRIVIAL 1
 # define YYSTYPE_IS_DECLARED 1

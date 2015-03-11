@@ -85,7 +85,7 @@ text:		T_MATH T_P T_MATH {
 					$$ = "$";
 				}
 			| text T_NEWP {
-					$$ = concat(3, "<p>", $1, "</p>\n\n");
+					$$ = concat(3, "<p>\n", $1, "\n</p>\n\n");
 				}
 			| paragraph {
 					$$ = $1;
@@ -97,7 +97,7 @@ text:		T_MATH T_P T_MATH {
 					$$ = concat(3, "\n<em>", $3, "</em>"); 
 				} 
 			| T_BEGIN_ITEMIZE item_list T_END_ITEMIZE {
-					$$ = concat(3, "\n<ul>", $2, "</ul>");
+					$$ = concat(3, "\n<ul>", $2, "\n</ul>");
 				}
 			| T_CITE T_LBRACE T_P T_RBRACE {
 					$$ = "";
@@ -123,10 +123,10 @@ item_list:	item_list item {
 ;
 
 item: 		T_ITEM T_P {
-					$$ = concat(3,"<li>",$2,"</li>");
+					$$ = concat(3,"\n<li>",$2,"</li>");
 				}
 			|  T_BEGIN_ITEMIZE item_list T_END_ITEMIZE {
-					$$ = concat(3, "<ul>", $2, "</ul>");
+					$$ = concat(3, "\n<ul>", $2, "\n</ul>");
 				}
 
 %%
