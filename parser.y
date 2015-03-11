@@ -7,6 +7,9 @@
 #include <stdarg.h>
 #include <string.h>
 #include <stdlib.h>
+
+char *concat(int count, ...);
+
 %}
 
 %union{
@@ -51,7 +54,7 @@ stmt_list:	stmt_list stmt
 			| stmt 
 ;
 
-stmt:		T_TITLE T_LBRACE T_P T_RBRACE
+stmt:		T_TITLE T_LBRACE text_list T_RBRACE
 			| T_MAKETITLE
 			| T_BEGIN_DOC
 			| T_END_DOC
@@ -72,8 +75,9 @@ text_list:	text_list text
 
 text:		T_MATH text T_MATH { printf("Texto matematico: %s", $2); $$ = $2; }
 			| T_DOLLAR { printf("T_DOLLAR"); $$ = "$"; } 
-			| T_NEWLINE { printf("\nNovo paragrafo\n"); $$ = "\n"; }
-			| T_P { printf("%s", $1); $$ = $1; } 
+			| T_NEWLINE { $$ = "\n"; }
+			| T_NEWLINE T_NEWLINE T_P { printf("\nNovo paragrafo: %s\n", $3); $$ = $3; }
+			| T_P { $$ = $1; } 
 			| T_TEXTBF T_LBRACE text T_RBRACE { printf("Texto em negrito: %s\n", $3); $$ = $3; } 
 			| T_TEXTIT T_LBRACE text T_RBRACE { printf("Texto em italico: %s\n", $3); $$ = $3; } 
 ;
@@ -82,8 +86,32 @@ text:		T_MATH text T_MATH { printf("Texto matematico: %s", $2); $$ = $2; }
 
 %%
 
-int yyerror(const char* errmsg)
-{
+char* concat(int count, ...) {
+    va_list ap;
+    int len = 1, i;
+
+    va_start(ap, count);
+    for(i=0 ; i<count ; i++)
+        len += strlen(va_arg(ap, char*));
+    va_end(ap);
+
+    char *result = (char*) calloc(sizeof(char),len);
+    int pos = 0;
+
+    // Actually concatenate strings
+    va_start(ap, count);
+    for(i=0 ; i<count ; i++)
+    {
+        char *s = va_arg(ap, char*);
+        strcpy(result+pos, s);
+        pos += strlen(s);
+    }
+    va_end(ap);
+
+    return result;
+}
+
+int yyerror(const char* errmsg) {
 	printf("\n*** Erro: %s\n", errmsg);
 }
  
