@@ -11,7 +11,12 @@
 #include <string.h>
 #include <stdlib.h>
 
+int ref_exists(char *string);
+void new_ref(char *string);
 char *concat(int count, ...);
+
+int len;
+char *title;
 
 %}
 
@@ -59,10 +64,13 @@ stmt_list:  stmt_list stmt
 ;
 
 stmt:   T_TITLE T_LBRACE T_P T_RBRACE {
-            //printf("Found title: %s\n", $3);
+            len = strlen($3);
+            title = (char*) malloc( (len+1) * sizeof(char) );
+            strncpy(title, $3, len);
+            title[len] = '\0';
           }
         | T_MAKETITLE {
-            //printf("MAKETITLE\n");
+            printf("<h1>%s</h1>\n", title);
           }
         | T_BEGIN_DOC {
             //printf("BEGIN_DOC\n");
@@ -142,39 +150,72 @@ freespace:  T_NEWLINE | T_SPACE
 
 %%
 
+/**
+ * Estruturas
+ */
+struct bibitem {
+  char *alias;
+  char *full;
+  int number;
+  struct bibitem *next;
+};
+
+int ref_index = 0;
+
+struct bibitem *bibl;
+
+/**
+ * Funcoes
+ */
+int ref_exists(char *string) {
+  int i;
+  int len;
+  len = sizeof(bibl)/sizeof(struct bibitem);
+  for (i = 0; i < len; i++) {
+    if (strcmp(bibl[i].alias, string) == 0)
+      return 1;
+  }
+  return 0;
+}
+
+void new_ref(char *string) {
+}
+
 char* concat(int count, ...) {
-    va_list ap;
-    int len = 1, i;
+  va_list ap;
+  int len = 1, i;
 
-    va_start(ap, count);
-    for(i=0 ; i<count ; i++)
-        len += strlen(va_arg(ap, char*));
-    va_end(ap);
+  va_start(ap, count);
+  for(i=0 ; i<count ; i++)
+    len += strlen(va_arg(ap, char*));
+  va_end(ap);
 
-    char *result = (char*) calloc(sizeof(char),len);
-    int pos = 0;
+  char *result = (char*) calloc(sizeof(char),len);
+  int pos = 0;
 
-    // Actually concatenate strings
-    va_start(ap, count);
-    for(i=0 ; i<count ; i++)
-    {
-        char *s = va_arg(ap, char*);
-        strcpy(result+pos, s);
-        pos += strlen(s);
-    }
-    va_end(ap);
+  // Actually concatenate strings
+  va_start(ap, count);
+  for(i=0 ; i<count ; i++) {
+    char *s = va_arg(ap, char*);
+    strcpy(result+pos, s);
+    pos += strlen(s);
+  }
+  va_end(ap);
 
-    return result;
+  return result;
 }
 
 int yyerror(const char* errmsg) {
-    printf("\n*** Erro: %s\n", errmsg);
+  printf("\n*** Erro: %s\n", errmsg);
 }
  
 int yywrap(void) { return 1; }
 
 int main(int argc, char** argv) {
-    //cria tags HTML no arquivo?
-    yyparse();
-    return 0;
+    
+  bibl = (struct bibitem*) malloc (sizeof(struct bibitem));
+  
+  yyparse();
+  return 0;
+  
 }
