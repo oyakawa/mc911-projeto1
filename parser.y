@@ -1,5 +1,8 @@
 /**
- * projeto1.ypp
+ * parser.y
+ * Alunos:
+ * Davi Uezono - RA097464
+ * Gustavo Oyakawa - RA117150
  */
 
 %{
@@ -13,7 +16,7 @@ char *concat(int count, ...);
 %}
 
 %union{
-	char *str;
+  char *str;
 }
 
 /* Declaração de tokens */
@@ -37,12 +40,12 @@ char *concat(int count, ...);
 %token T_LBRACKET
 %token T_RBRACKET
 %token T_NEWLINE
-%token T_NEWP
+%token T_SPACE
 %token <str> T_P
 /* Tokens de caracteres */
 %token T_DOLLAR
 
-%type <str> text paragraph p_tail item_list item
+%type <str> text_list text list item_list item
 
 %start stmt_list
 
@@ -51,83 +54,91 @@ char *concat(int count, ...);
 %%
 /* Declaração da gramática */
 
-stmt_list:	stmt_list stmt 
-			| stmt 
+stmt_list:  stmt_list stmt 
+            | stmt 
 ;
 
-stmt:		T_TITLE T_LBRACE T_P T_RBRACE {
-					//printf("Found title: %s\n", $3);
-				}
-			| T_MAKETITLE {
-					//printf("MAKETITLE\n");
-				}
-			| T_BEGIN_DOC {
-					//printf("BEGIN_DOC\n");
-				}
-			| T_END_DOC {
-					//printf("END_DOC\n");
-				}
-			| T_INCLUDEGRAPHICS T_LBRACE T_P T_RBRACE
-			| T_BEGIN_BIB
-			| T_END_BIB
-			| T_BIB_ITEM T_LBRACE T_P T_RBRACE T_P
-			| text {
-					printf("%s", $1);
-				}
+stmt:   T_TITLE T_LBRACE T_P T_RBRACE {
+            //printf("Found title: %s\n", $3);
+          }
+        | T_MAKETITLE {
+            //printf("MAKETITLE\n");
+          }
+        | T_BEGIN_DOC {
+            //printf("BEGIN_DOC\n");
+          }
+        | T_END_DOC {
+            //printf("END_DOC\n");
+          }
+        | T_INCLUDEGRAPHICS T_LBRACE T_P T_RBRACE{
+            printf("<img src=\"%s\" />\n", $3);
+          }
+        | T_BEGIN_BIB
+        | T_END_BIB
+        | T_BIB_ITEM T_LBRACE T_P T_RBRACE T_P
+        | T_NEWLINE
+        | T_SPACE
+        | text_list T_NEWLINE T_NEWLINE {
+            printf("<p>\n%s\n</p>\n", $1);
+          }
 ;
 
-text:		T_MATH T_P T_MATH {
-					printf("Texto matematico: %s", $2);
-					$$ = $2;
-				}
-			| T_DOLLAR {
-					printf("T_DOLLAR");
-					$$ = "$";
-				}
-			| text T_NEWP {
-					$$ = concat(3, "<p>\n", $1, "\n</p>\n\n");
-				}
-			| paragraph {
-					$$ = $1;
-				}
-			| T_TEXTBF T_LBRACE T_P T_RBRACE {
-					$$ = concat(3, "<strong>", $3, "</strong>");
-				} 
-			| T_TEXTIT T_LBRACE T_P T_RBRACE { 
-					$$ = concat(3, "\n<em>", $3, "</em>"); 
-				} 
-			| T_BEGIN_ITEMIZE item_list T_END_ITEMIZE {
-					$$ = concat(3, "\n<ul>", $2, "\n</ul>");
-				}
-			| T_CITE T_LBRACE T_P T_RBRACE {
-					$$ = "";
-				}
+text_list:  text_list T_NEWLINE text { $$ = concat(3, $1, " ", $3); }
+            | text_list T_SPACE text { $$ = concat(3, $1, " ", $3); }
+            | text_list text { $$ = concat(2, $1, $2); }
+            | text { $$ = $1; }
 ;
 
-paragraph:	T_P p_tail {
-					$$ =concat(2, $1, $2);
-				}
-			| T_P { $$ = $1; }
+text:   T_MATH T_P T_MATH {
+            $$ = concat(3,"<span class=\"MathJax\">", $2, "</span>");
+          }
+        | T_DOLLAR {
+            //printf("T_DOLLAR");
+            $$ = "$";
+          }
+        | T_P {
+            $$ = $1;
+          }
+        | T_TEXTBF T_LBRACE T_P T_RBRACE {
+            $$ = concat(3, "<strong>", $3, "</strong>");
+          } 
+        | T_TEXTIT T_LBRACE T_P T_RBRACE { 
+            $$ = concat(3, "<em>", $3, "</em>"); 
+          } 
+        | list {
+            $$ = $1;
+          }
+        | T_CITE T_LBRACE T_P T_RBRACE {
+            $$ = "";
+          }
 ;
 
-p_tail:		T_NEWLINE paragraph { $$ = concat(2, " ", $2); }
+list:   T_BEGIN_ITEMIZE freespace_list item_list freespace_list T_END_ITEMIZE {
+            $$ = concat(3, "\n<ul>", $3, "\n</ul>");
+          }
 ;
 
-item_list:	item_list item {
-					$$ = concat(2, $1, $2);
-				}
-			| item {
-					//printf("item: %s\n",$1);
-					$$ = $1;
-				}
+item_list:  item_list freespace_list item {
+                $$ = concat(2, $1, $3);
+              }
+            | item {
+                $$ = $1;
+              }
 ;
 
-item: 		T_ITEM T_P {
-					$$ = concat(3,"\n<li>",$2,"</li>");
-				}
-			|  T_BEGIN_ITEMIZE item_list T_END_ITEMIZE {
-					$$ = concat(3, "\n<ul>", $2, "\n</ul>");
-				}
+item:       T_ITEM T_P {                
+                printf("item: %s\n",$2);
+                $$ = concat(3,"\n<li>",$2,"</li>");
+              }
+            | list { $$ = $1; }
+;
+
+freespace_list: freespace_list freespace
+                | freespace
+;
+
+freespace:  T_NEWLINE | T_SPACE
+;
 
 %%
 
@@ -157,13 +168,13 @@ char* concat(int count, ...) {
 }
 
 int yyerror(const char* errmsg) {
-	printf("\n*** Erro: %s\n", errmsg);
+    printf("\n*** Erro: %s\n", errmsg);
 }
  
 int yywrap(void) { return 1; }
 
 int main(int argc, char** argv) {
-	//cria tags HTML no arquivo?
-	yyparse();
-	return 0;
+    //cria tags HTML no arquivo?
+    yyparse();
+    return 0;
 }

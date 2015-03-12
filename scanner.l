@@ -1,5 +1,5 @@
 /**
- * projeto1.l
+ * scanner.l
  */
 
 %{
@@ -12,33 +12,33 @@ ANYCHAR .
 /* Emissão de tokens */
 %%
 
-[ \n]*"\\documentclass"[a-zA-Z0-9.,\[\]\{\} ]* ;
-[ \n]*"\\usepackage"[a-zA-Z0-9.,\[\]\{\} ]* ;
-[ \n]*"\\author"[a-zA-Z0-9.,\[\]\{\} ]* ;
-[ \n]*"\\title"					{return T_TITLE;}
-[ \n]*"\\maketitle"				{return T_MAKETITLE;}
-[ \n]*"\\textbf"					{return T_TEXTBF;}
-[ \n]*"\\textit"					{return T_TEXTIT;}
-[ \n]*"\\begin{document}"			{return T_BEGIN_DOC;}
-[ \n]*"\\end{document}"			{return T_END_DOC;}
-[ \n]*"\\begin{itemize}"			{return T_BEGIN_ITEMIZE;}
-[ \n]*"\\end{itemize}"			{return T_END_ITEMIZE;}
-[ \n]*"\\item"					{return T_ITEM;}
-[ \n]*"\\includegraphics"			{return T_INCLUDEGRAPHICS;}
-[ \n]*"\\cite"					{return T_CITE;}
-[ \n]*"\\begin{thebibliography}"	{return T_BEGIN_BIB;}
-[ \n]*"\\end{thebibliography}"	{return T_END_BIB;}
-[ \n]*"\\bibitem"					{return T_BIB_ITEM;}
-"\$"						{return T_MATH;}
-"\\\$"						{return T_DOLLAR;}
-"{"							{return T_LBRACE;}
-"}"							{return T_RBRACE;}
-"["							{return T_LBRACKET;}
-"]"							{return T_RBRACKET;}
-"\n\n"						{return T_NEWP;}
-"\n"						{return T_NEWLINE;}
-{P}							{yylval.str = (char*) strdup(yytext); return T_P;}
-{ANYCHAR}					/*ignore*/;
+"\\documentclass"[a-zA-Z0-9.,\[\]\{\} ]*          ;
+"\\usepackage"[a-zA-Z0-9.,\[\]\{\} ]*             ;
+"\\author"[a-zA-Z0-9.,\[\]\{\} ]*                 ;
+"\\title"                                         {return T_TITLE;}
+"\\maketitle"                                     {return T_MAKETITLE;}
+"\\textbf"                                        {return T_TEXTBF;}
+"\\textit"                                        {return T_TEXTIT;}
+"\\begin{document}"                               {return T_BEGIN_DOC;}
+"\\end{document}"                                 {return T_END_DOC;}
+"\\begin{itemize}"                                {return T_BEGIN_ITEMIZE;}
+"\\end{itemize}"                                  {return T_END_ITEMIZE;}
+"\\item"                                          {return T_ITEM;}
+"\\includegraphics"                               {return T_INCLUDEGRAPHICS;}
+"\\cite"                                          {return T_CITE;}
+"\\begin{thebibliography}"                        {return T_BEGIN_BIB;}
+"\\end{thebibliography}"                          {return T_END_BIB;}
+"\\bibitem"                                       {return T_BIB_ITEM;}
+"\$"                                              {return T_MATH;}
+"\\\$"                                            {return T_DOLLAR;}
+"{"                                               {return T_LBRACE;}
+"}"                                               {return T_RBRACE;}
+"["                                               {return T_LBRACKET;}
+"]"                                               {return T_RBRACKET;}
+"\n"                                              {return T_NEWLINE;}
+[ ]*                                              {return T_SPACE;}
+{P}                                               {yylval.str = (char*) strdup(yytext); return T_P;}
+{ANYCHAR}                                         ;
 
 %%
 /* Código C adicional */
