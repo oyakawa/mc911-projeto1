@@ -10,9 +10,9 @@
 #include <stdarg.h>
 #include <string.h>
 #include <stdlib.h>
-
-int ref_exists(char *string);
-void new_ref(char *string);
+  
+int reference_exist(char *string);
+void new_reference(char *string);
 char *concat(int count, ...);
 
 int len;
@@ -163,10 +163,26 @@ struct bibitem {
 int ref_index = 0;
 
 struct bibitem *bibl;
+struct bibitem *end;
 
 /**
  * Funcoes
  */
+
+int reference_exist(char *string) {
+  struct bibitem *current;
+  current = bibl;
+  
+  while (strcmp(current->alias, string) != 0) {
+    if (current->next == NULL) {
+      return 0;
+    }
+    current = current->next;
+  }
+  return 1;
+}
+
+/** ref_exists implemented as a static vector of bib references
 int ref_exists(char *string) {
   int i;
   int len;
@@ -177,8 +193,24 @@ int ref_exists(char *string) {
   }
   return 0;
 }
+*/
 
-void new_ref(char *string) {
+void new_reference(char *string) {
+  struct bibitem *new_ref;
+  int len;
+  
+  new_ref = (struct bibitem*) malloc (sizeof(struct bibitem));
+  len = strlen(string);
+  
+  strncpy(new_ref->alias, string, len);
+  new_ref->alias[len] = '\0';
+  new_ref->alias[0] = '\0';
+  new_ref->number = ++ref_index;
+  new_ref->next = NULL;
+  
+  // Insertion always in the end of linked list.
+  end->next = new_ref;
+  end = new_ref;
 }
 
 char* concat(int count, ...) {
@@ -212,10 +244,30 @@ int yyerror(const char* errmsg) {
 int yywrap(void) { return 1; }
 
 int main(int argc, char** argv) {
-    
+  struct bibitem *current;
+  
+  bibl = NULL;
   bibl = (struct bibitem*) malloc (sizeof(struct bibitem));
+  if (bibl == NULL) fprintf(stderr, "ERRO DE ALOCACAO: bibl\n");
+  
+  bibl->alias = '\0';
+  bibl->full = '\0';
+  bibl->number = 0;
+  bibl->next = NULL;
+  
+  end = bibl;
   
   yyparse();
+  
+  current = bibl;
+  while (current->alias != '\0') {
+    printf("%02d. %s :: %s\n", current->number, current->alias, current->full);
+    current = current->next;
+  }
+  
+  if (current->alias == '\0')
+    fprintf(stderr, "DEBUG: %s\nSUCCESS!\n", current->alias);
+  
   return 0;
   
 }
