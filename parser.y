@@ -64,31 +64,37 @@ stmt_list:  stmt_list stmt
 ;
 
 stmt:   T_TITLE T_LBRACE T_P T_RBRACE {
-            len = strlen($3);
-            title = (char*) malloc( (len+1) * sizeof(char) );
-            strncpy(title, $3, len);
-            title[len] = '\0';
-          }
+          len = strlen($3);
+          title = (char*) malloc( (len+1) * sizeof(char) );
+          strncpy(title, $3, len);
+          title[len] = '\0';
+        }
         | T_MAKETITLE {
-            printf("<h1>%s</h1>\n", title);
-          }
+          printf("<h1>%s</h1>\n", title);
+        }
         | T_BEGIN_DOC {
-            //printf("BEGIN_DOC\n");
-          }
+          //printf("BEGIN_DOC\n");
+        }
         | T_END_DOC {
-            //printf("END_DOC\n");
-          }
-        | T_INCLUDEGRAPHICS T_LBRACE T_P T_RBRACE{
-            printf("<img src=\"%s\" />\n", $3);
-          }
-        | T_BEGIN_BIB
-        | T_END_BIB
-        | T_BIB_ITEM T_LBRACE T_P T_RBRACE T_P
+          //printf("END_DOC\n");
+        }
+        | T_INCLUDEGRAPHICS T_LBRACE T_P T_RBRACE {
+          printf("<img src=\"%s\" />\n", $3);
+        }
+        | T_BEGIN_BIB freespace_list {
+          printf("BEGIN BIBLIOGRAPHY\n");
+        }
+        | T_END_BIB freespace_list {
+          printf("END BIBLIOGRAPHY\n");
+        }
+        | T_BIB_ITEM T_LBRACE T_P T_RBRACE T_P freespace_list {
+          printf("BIB ITEM :: %s :: %s\n", $3, $5);
+        }
         | T_NEWLINE
         | T_SPACE
         | text_list T_NEWLINE T_NEWLINE {
-            printf("<p>\n%s\n</p>\n", $1);
-          }
+          printf("<p>\n%s\n</p>\n", $1);
+        }
 ;
 
 text_list:  text_list T_NEWLINE text { $$ = concat(3, $1, " ", $3); }
@@ -98,46 +104,48 @@ text_list:  text_list T_NEWLINE text { $$ = concat(3, $1, " ", $3); }
 ;
 
 text:   T_MATH T_P T_MATH {
-            $$ = concat(3,"<span class=\"MathJax\">", $2, "</span>");
-          }
+          $$ = concat(3,"<span class=\"MathJax\">", $2, "</span>");
+        }
         | T_DOLLAR {
-            //printf("T_DOLLAR");
-            $$ = "$";
-          }
+          //printf("T_DOLLAR");
+          $$ = "$";
+        }
         | T_P {
-            $$ = $1;
-          }
+          $$ = $1;
+        }
         | T_TEXTBF T_LBRACE T_P T_RBRACE {
-            $$ = concat(3, "<strong>", $3, "</strong>");
-          } 
+          $$ = concat(3, "<strong>", $3, "</strong>");
+        } 
         | T_TEXTIT T_LBRACE T_P T_RBRACE { 
-            $$ = concat(3, "<em>", $3, "</em>"); 
-          } 
+          $$ = concat(3, "<em>", $3, "</em>"); 
+        } 
         | list {
-            $$ = $1;
-          }
+          $$ = $1;
+        }
         | T_CITE T_LBRACE T_P T_RBRACE {
-            $$ = "";
-          }
+          //$$ = "";
+          //new_reference($3);
+          printf("CITE: %s\n", $3);
+        }
 ;
 
 list:   T_BEGIN_ITEMIZE freespace_list item_list freespace_list T_END_ITEMIZE {
-            $$ = concat(3, "\n<ul>", $3, "\n</ul>");
-          }
+          $$ = concat(3, "\n<ul>", $3, "\n</ul>");
+        }
 ;
 
 item_list:  item_list freespace_list item {
-                $$ = concat(2, $1, $3);
-              }
+              $$ = concat(2, $1, $3);
+            }
             | item {
-                $$ = $1;
-              }
+              $$ = $1;
+            }
 ;
 
 item:       T_ITEM T_P {                
-                printf("item: %s\n",$2);
-                $$ = concat(3,"\n<li>",$2,"</li>");
-              }
+              printf("item: %s\n", $2);
+              $$ = concat(3,"\n<li>",$2,"</li>");
+            }
             | list { $$ = $1; }
 ;
 
@@ -202,7 +210,13 @@ void new_reference(char *string) {
   new_ref = (struct bibitem*) malloc (sizeof(struct bibitem));
   len = strlen(string);
   
-  strncpy(new_ref->alias, string, len);
+  fprintf(stderr, "DEBUG 1\n");
+  
+  //strncpy(new_ref->alias, string, len);
+  strcpy(new_ref->alias, string);
+  
+  fprintf(stderr, "DEBUG 2\n");
+  
   new_ref->alias[len] = '\0';
   new_ref->alias[0] = '\0';
   new_ref->number = ++ref_index;
