@@ -1,5 +1,8 @@
 /**
  * scanner.l
+ * Alunos:
+ * Davi Uezono - RA097464
+ * Gustavo Oyakawa - RA117150
  */
 
 %{

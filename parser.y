@@ -127,6 +127,7 @@ text:   T_MATH T_P T_MATH {
         | T_CITE T_LBRACE T_P T_RBRACE {
           //printf("CITE %02d :: %s\n", new_reference($3), $3);
           new_reference($3);
+          $$ = concat(3, "%", $3, "%");
         }
 ;
 
@@ -179,24 +180,10 @@ struct bibitem *end;
  */
 
 /*
-Source code for this function: 
-http://www.linuxquestions.org/questions/programming-9/replace-a- substring 
--with- another-string-in-c-170076/#post_message_877511
+ * http://forums.devshed.com/unix-help-35/unix-replace-text-files-directory-
+146179 . html#post_message_1135303
+* https://www.gidforums.com/t-7414.html
 */
-char *replace_str(char *str, char *orig, char *rep){
-  static char buffer[4096];
-  char *p;
-  
-  if(!(p = strstr(str, orig)))  // Is 'orig' even in 'str'?
-    return str;
-  
-  strncpy(buffer, str, p-str); // Copy characters from 'str' start to 'orig' st$
-  buffer[p-str] = '\0';
-  
-  sprintf(buffer+(p-str), "%s%s", rep, p+strlen(orig));
-  
-  return buffer;
-}
 
 int reference_exist(char *alias) {
   struct bibitem *current;
@@ -210,17 +197,7 @@ int reference_exist(char *alias) {
     }
   }
   return 0;
-  
-  /*
-  while (current->alias != alias) {
-    current = current->next;
-    if (current == NULL) {
-      return 0;
-    }
-  }
-  // Return the index of the reference.
-  return current->number;
-  */
+
 }
 
 int full_reference(char *alias, char *full) {
@@ -323,13 +300,7 @@ int main(int argc, char** argv) {
     current = current->next;
     printf("%02d. %s :: %s\n", current->number, current->alias, current->full);
   }
-  /*
-  while (current->alias != '\0') {
-    printf("%02d. %s :: %s\n", current->number, current->alias, current->full);
-    current = current->next;
-  }
-  */
-  //if (current->alias == '\0')
+  
   if (current->next == NULL)
     fprintf(stderr, "SUCCESS!\n");
   
