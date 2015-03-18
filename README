@@ -1,0 +1,21 @@
+/**
+ * README
+ * Alunos:
+ * Davi Uezono - RA097464
+ * Gustavo Oyakawa - RA117150
+ */
+
+To compile and clean project, please use Makefile.
+This program generates a file named "output-(timestamp).html" in every instance.
+The file "teste.tex" contains all successful cases for this project.
+
+External dependencies:
+- MathJax;
+- Perl (through system call).
+
+Not working (known issues):
+- (*) Itemlist with items with more than a single line;
+- (*) Refecerences with more than a single line;
+- LaTeX Math mode for special commands containing a backslash (\).
+
+(*) These issues are returning a Syntax Error, and our parser stops.

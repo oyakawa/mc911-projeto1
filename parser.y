@@ -10,6 +10,7 @@
 #include <stdarg.h>
 #include <string.h>
 #include <stdlib.h>
+#include <time.h>
 
 int reference_exist(char *alias);
 void full_reference(char *alias, char *full);
@@ -139,7 +140,6 @@ text:   T_MATH T_P T_MATH {
           $$ = concat(3, "$", $2, "$");
         }
         | T_DOLLAR {
-          //printf("T_DOLLAR");
           $$ = "$";
         }
         | T_P {
@@ -288,9 +288,10 @@ int main(int argc, char** argv) {
   struct bibitem *current;
   char buffer[200] = { };
   char number[10] = { };
-  char *search;
-  char *replacer;
-  
+  char search[50];
+  char replacer[50];
+  time_t rawtime;
+
   bibl = NULL;
   bibl = (struct bibitem*) malloc (sizeof(struct bibitem));
   if (bibl == NULL) fprintf(stderr, "ERRO DE ALOCACAO: bibl\n");
@@ -302,21 +303,23 @@ int main(int argc, char** argv) {
   
   end = bibl;
   
-  f = fopen("output.html", "w");
+  time (&rawtime);
+  
+  f = fopen(concat(3, "output-", ctime(&rawtime), ".html"), "w");
   
   yyparse();
   
   fclose(f);
   
   /*
-   * The idea here in this commented block was to search and replace directly
+   * The idea here in this block was to search and replace directly
    * from shell script using 'strcat' and 'sprintf' functions to create the
-   *  command and system to call it and execute it.
+   *  command and 'system' to call it and execute it.
    * 
    * References:
    * http://forums.devshed.com/unix-help-35/unix-replace-text-files-directory-146179.html#post_message_1135303
    * https://www.gidforums.com/t-7414.html
-   
+   */
   current = bibl;
   while (current->next != NULL) {
     current = current->next;
@@ -325,24 +328,18 @@ int main(int argc, char** argv) {
     strcat(search, "%");
     strcat(search, current->alias);
     strcat(search, "%");
-    //puts(search);
-    fprintf(stderr, "DEBUG!\n");
 
     replacer[0] = '\0';
-    fprintf(stderr, "DEBUG!\n");
     strcat(replacer, "[");
-    fprintf(stderr, "DEBUG!\n");
     sprintf(number, "%d", current->number);
-    fprintf(stderr, "DEBUG!\n");
     strcat(replacer, number);
-    fprintf(stderr, "DEBUG!\n");
     strcat(replacer, "]");
         
-    fprintf(stderr, "DEBUG!\n");
-    sprintf(buffer, "perl -pi -e 's/%s/%s/g' output.html", search, replacer);
-    fprintf(stderr, "SYSTEM: %s\n", buffer);
+    sprintf(buffer, concat(3, "perl -pi -e 's/%s/%s/g' 'output-", ctime(&rawtime), ".html'"), search, replacer);
+    
+    system(buffer);
+    
   }
-   */  
   
   return 0;
 }
