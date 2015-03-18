@@ -11,8 +11,9 @@
 #include <string.h>
 #include <stdlib.h>
   
-int reference_exist(char *string);
-void new_reference(char *string);
+int reference_exist(char *alias);
+int full_reference(char *alias, char *full);
+int new_reference(char *alias);
 char *concat(int count, ...);
 
 int len;
@@ -82,13 +83,14 @@ stmt:   T_TITLE T_LBRACE T_P T_RBRACE {
           printf("<img src=\"%s\" />\n", $3);
         }
         | T_BEGIN_BIB freespace_list {
-          printf("BEGIN BIBLIOGRAPHY\n");
+          //printf("BEGIN BIBLIOGRAPHY\n");
         }
         | T_END_BIB freespace_list {
-          printf("END BIBLIOGRAPHY\n");
+          //printf("END BIBLIOGRAPHY\n");
         }
         | T_BIB_ITEM T_LBRACE T_P T_RBRACE T_P freespace_list {
-          printf("BIB ITEM :: %s :: %s\n", $3, $5);
+          //printf("BIB ITEM %02d : %s : %s\n", full_reference($3, $5), $3, $5);
+          full_reference($3, $5);
         }
         | T_NEWLINE
         | T_SPACE
@@ -123,9 +125,8 @@ text:   T_MATH T_P T_MATH {
           $$ = $1;
         }
         | T_CITE T_LBRACE T_P T_RBRACE {
-          //$$ = "";
-          //new_reference($3);
-          printf("CITE: %s\n", $3);
+          //printf("CITE %02d :: %s\n", new_reference($3), $3);
+          new_reference($3);
         }
 ;
 
@@ -159,7 +160,7 @@ freespace:  T_NEWLINE | T_SPACE
 %%
 
 /**
- * Estruturas
+ * Structs
  */
 struct bibitem {
   char *alias;
@@ -174,57 +175,101 @@ struct bibitem *bibl;
 struct bibitem *end;
 
 /**
- * Funcoes
+ * Functions
  */
 
-int reference_exist(char *string) {
+/*
+Source code for this function: 
+http://www.linuxquestions.org/questions/programming-9/replace-a- substring 
+-with- another-string-in-c-170076/#post_message_877511
+*/
+char *replace_str(char *str, char *orig, char *rep){
+  static char buffer[4096];
+  char *p;
+  
+  if(!(p = strstr(str, orig)))  // Is 'orig' even in 'str'?
+    return str;
+  
+  strncpy(buffer, str, p-str); // Copy characters from 'str' start to 'orig' st$
+  buffer[p-str] = '\0';
+  
+  sprintf(buffer+(p-str), "%s%s", rep, p+strlen(orig));
+  
+  return buffer;
+}
+
+int reference_exist(char *alias) {
   struct bibitem *current;
   current = bibl;
   
-  while (strcmp(current->alias, string) != 0) {
-    if (current->next == NULL) {
-      return 0;
-    }
+  while (current->next != NULL) {
     current = current->next;
-  }
-  return 1;
-}
-
-/** ref_exists implemented as a static vector of bib references
-int ref_exists(char *string) {
-  int i;
-  int len;
-  len = sizeof(bibl)/sizeof(struct bibitem);
-  for (i = 0; i < len; i++) {
-    if (strcmp(bibl[i].alias, string) == 0)
-      return 1;
+    if (!strcmp(current->alias, alias)) {
+      // Return the index of the reference.
+      return current->number;
+    }
   }
   return 0;
+  
+  /*
+  while (current->alias != alias) {
+    current = current->next;
+    if (current == NULL) {
+      return 0;
+    }
+  }
+  // Return the index of the reference.
+  return current->number;
+  */
 }
-*/
 
-void new_reference(char *string) {
-  struct bibitem *new_ref;
-  int len;
+int full_reference(char *alias, char *full) {
+  struct bibitem *current, *new_ref;
+  int ref, i;
+  
+  ref = reference_exist(alias);
+  
+  if (ref) {
+    current = bibl;
+    for (i = 0; i < ref; i++) {
+      current = current->next;
+    }
+    current->full = full;
+    return current->number;
+  }
   
   new_ref = (struct bibitem*) malloc (sizeof(struct bibitem));
-  len = strlen(string);
-  
-  fprintf(stderr, "DEBUG 1\n");
-  
-  //strncpy(new_ref->alias, string, len);
-  strcpy(new_ref->alias, string);
-  
-  fprintf(stderr, "DEBUG 2\n");
-  
-  new_ref->alias[len] = '\0';
-  new_ref->alias[0] = '\0';
+  new_ref->alias = alias;
+  new_ref->full = full;
   new_ref->number = ++ref_index;
   new_ref->next = NULL;
   
   // Insertion always in the end of linked list.
   end->next = new_ref;
   end = new_ref;
+  
+  // Return the index of the reference.
+  return new_ref->number;
+}
+
+int new_reference(char *alias) {
+  struct bibitem *new_ref;
+  
+  if (reference_exist(alias))
+    return 0;
+  
+  new_ref = (struct bibitem*) malloc (sizeof(struct bibitem));
+  new_ref->alias = alias;
+  new_ref->full = '\0';
+  new_ref->number = ++ref_index;
+  new_ref->next = NULL;
+  
+  // Insertion always in the end of linked list.
+  end->next = new_ref;
+  end = new_ref;
+  
+  // Return the index of the reference.
+  return new_ref->number;
 }
 
 char* concat(int count, ...) {
@@ -274,13 +319,19 @@ int main(int argc, char** argv) {
   yyparse();
   
   current = bibl;
+  while (current->next != NULL) {
+    current = current->next;
+    printf("%02d. %s :: %s\n", current->number, current->alias, current->full);
+  }
+  /*
   while (current->alias != '\0') {
     printf("%02d. %s :: %s\n", current->number, current->alias, current->full);
     current = current->next;
   }
-  
-  if (current->alias == '\0')
-    fprintf(stderr, "DEBUG: %s\nSUCCESS!\n", current->alias);
+  */
+  //if (current->alias == '\0')
+  if (current->next == NULL)
+    fprintf(stderr, "SUCCESS!\n");
   
   return 0;
   
